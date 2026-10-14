@@ -50,6 +50,9 @@ POS_ETIQUETA = {
 POS_ETIQUETA_DEFECTO = ((12, 8), "left")
 
 # Parámetros del video
-FPS = 0.5          # 1 frame = 1 año; 0.5 fps -> 2 segundos por año
+SEG_POR_ANIO = 2   # cada año (un fotograma de la animación) se muestra 2 segundos
+# El MP4 se escribe a una tasa estándar: ffmpeg repite cada año SEG_POR_ANIO * FPS_SALIDA veces.
+# Una tasa de 0,5 fps es válida pero muchos reproductores se traban o no arrancan con ella.
+FPS_SALIDA = 30
 UMBRAL_MUESTRA = 100  # con menos países que esto se muestra un aviso de muestra reducida
 ANCHO_IN, ALTO_IN, DPI = 16, 9, 120   # 1920 x 1080 px

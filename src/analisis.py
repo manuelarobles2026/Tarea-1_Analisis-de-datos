@@ -153,7 +153,7 @@ Figuras de apoyo: `output/figures/correlacion_por_anio.png`, `output/figures/cam
 ## 5. Video
 
 - Archivo: `output/video_final.mp4`
-- Frames: {video.get('frames', 'n/d')} (1 frame = 1 año), {C.FPS} fps → duración {video.get('duracion', 'n/d')} s
+- Cada año es una imagen que se mantiene {C.SEG_POR_ANIO} s; el MP4 se escribe a {C.FPS_SALIDA} fps para compatibilidad con reproductores ({video.get('frames', 'n/d')} fotogramas en total), duración {video.get('duracion', 'n/d')} s
 - Resolución: {video.get('resolucion', 'n/d')}; códec {video.get('codec', 'n/d')}
 
 ## 6. Limitaciones

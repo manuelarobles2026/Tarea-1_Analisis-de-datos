@@ -18,6 +18,7 @@
    | Tiempo | `year` (1 frame = 1 año) |
 
    - Ejes y escala de tamaño **fijos** para todos los años.
+   - Cada año es una sola imagen que se mantiene 2 s. El MP4 se escribe a 30 fps (ffmpeg repite esa imagen), con el índice al inicio del archivo (`faststart`) y un fotograma clave por segundo, para que arranque de inmediato y se pueda adelantar en cualquier reproductor. Una primera versión a 0,5 fps sin `faststart` se trababa en algunos reproductores.
    - El año aparece grande en la esquina superior izquierda junto con el número de países graficados y la correlación de Pearson entre países de ese año.
    - Los 8 países resaltados (Colombia, United States, China, India, Denmark, Venezuela, Afghanistan, Germany) llevan color, etiqueta y una **estela** con su trayectoria observada; los demás aparecen en gris sin etiqueta.
    - Si un país resaltado no tiene dato un año, se muestra su estela con la nota "(sin dato en AAAA)" en lugar de un círculo.
@@ -29,7 +30,7 @@
 
 | Archivo | Contenido |
 |---|---|
-| `output/video_final.mp4` | Animación final (1920×1080, H.264, 16 frames, 2 s por año, 32 s) |
+| `output/video_final.mp4` | Animación final (1920×1080, H.264, 30 fps, 32 s): 16 años, cada uno una imagen fija durante 2 s |
 | `output/resumen_datos.csv` | Por año: países en la base, graficados y excluidos; media, mediana, mín. y máx. de las 3 variables; correlaciones de Pearson y Spearman |
 | `output/reporte_analisis.md` | Inspección, faltantes, decisiones de limpieza, hallazgos, verificación del video y limitaciones |
 | `output/figures/frame_2005.png`, `frame_2012.png`, `frame_2020.png` | Frames de muestra del video |

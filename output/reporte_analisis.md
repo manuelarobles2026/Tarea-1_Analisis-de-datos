@@ -120,7 +120,7 @@ Figuras de apoyo: `output/figures/correlacion_por_anio.png`, `output/figures/cam
 ## 5. Video
 
 - Archivo: `output/video_final.mp4`
-- Frames: 16 (1 frame = 1 año), 0.5 fps → duración 32.0 s
+- Cada año es una imagen que se mantiene 2 s; el MP4 se escribe a 30 fps para compatibilidad con reproductores (960 fotogramas en total), duración 32.0 s
 - Resolución: 1920x1080; códec h264
 
 ## 6. Limitaciones

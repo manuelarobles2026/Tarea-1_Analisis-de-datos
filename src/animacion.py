@@ -149,8 +149,12 @@ class Animador:
     def exportar_video(self, ruta):
         anim = FuncAnimation(self.fig, lambda i: self.dibujar(self.anios[i]),
                              frames=len(self.anios), blit=False)
-        writer = FFMpegWriter(fps=C.FPS, codec="libx264", bitrate=4000,
-                              extra_args=["-pix_fmt", "yuv420p"],
+        writer = FFMpegWriter(
+            fps=1 / C.SEG_POR_ANIO, codec="libx264", bitrate=4000,
+            extra_args=["-r", str(C.FPS_SALIDA),          # salida a tasa estándar
+                        "-pix_fmt", "yuv420p",             # compatible con QuickTime/navegadores
+                        "-g", str(C.FPS_SALIDA),           # un fotograma clave por segundo
+                        "-movflags", "+faststart"],        # índice al inicio: arranca sin leer todo
                               metadata={"title": "Ingreso y bienestar subjetivo 2005-2020"})
         anim.save(ruta, writer=writer, dpi=C.DPI)
         plt.close(self.fig)
