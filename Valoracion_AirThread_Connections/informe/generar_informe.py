@@ -163,6 +163,7 @@ def paso_informe(ruta):
     # Word (para editar) y PDF (HTML + Chromium, con estilos propios)
     docx = SALIDA_MD.replace(".md", ".docx")
     subprocess.run(["pandoc", SALIDA_MD, "-o", docx, "--from", "markdown+pipe_tables+superscript-tex_math_dollars"], check=True)
+    subprocess.run([sys.executable, os.path.join(AQUI, "formato_word.py"), docx], check=True)
     html = SALIDA_MD.replace(".md", ".html")
     subprocess.run(["pandoc", SALIDA_MD, "-s", "-o", html, "--from", "markdown+pipe_tables+superscript-tex_math_dollars",
                     "--css", os.path.join(AQUI, "estilo.css"), "--embed-resources", "--metadata", "lang=es"], check=True)
