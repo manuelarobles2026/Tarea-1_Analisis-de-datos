@@ -28,12 +28,20 @@ CELDAS = {
     "rpm07": ("Exhibit 3", "G73"), "cpa06": ("Exhibit 3", "F60"), "cpa07": ("Exhibit 3", "G60"),
     "deuda": ("Exhibit 6", "H8"), "linea11": ("PROYECCIONES", "F85"), "ahorro_bh12": ("SINERGIAS", "H8"),
     "ipo": ("PROYECCIONES", "K7"), "ebitda07": ("PROYECCIONES", "B26"),
+    "dv_total": ("VALORACIÓN", "B43"), "ev_total": ("VALORACIÓN", "B24"), "afil_libros": ("Exhibit 5", "G72"),
+    "linea12_total": ("PROYECCIONES", "G85"), "bullet": ("Exhibit 6", "P11"), "deuda_ebitda08": ("PROYECCIONES", "C97"),
+    "deuda_ebitda12": ("PROYECCIONES", "G97"), "cobertura08": ("PROYECCIONES", "C98"),
 }
 DERIVADAS = {  # clave: (fórmula en celdas, función)
     "rpm_var": ("Exhibit 3!G73 / Exhibit 3!F73 − 1", lambda v: v["rpm07"] / v["rpm06"] - 1),
     "cpa_var": ("Exhibit 3!G60 / Exhibit 3!F60 − 1", lambda v: v["cpa07"] / v["cpa06"] - 1),
     "sin_tot": ("VALORACIÓN!B28 + VALORACIÓN!B29", lambda v: v["sin_bh"] + v["sin_rev"]),
     "mitad_rev": ("VALORACIÓN!B29 / 2", lambda v: v["sin_rev"] / 2),
+    "linea12": ("PROYECCIONES!G85 − Exhibit 6!P11", lambda v: v["linea12_total"] - v["bullet"]),
+    "deuda50": ("0,5 × VALORACIÓN!B8", lambda v: 0.5 * v["ops"]),
+    "reduccion": ("Exhibit 6!H8 − 0,5 × VALORACIÓN!B8", lambda v: v["deuda"] - 0.5 * v["ops"]),
+    "dv_afil_libros": ("Exhibit 6!H8 / (VALORACIÓN!B24 − VALORACIÓN!B13 + Exhibit 5!G72)",
+                       lambda v: v["deuda"] / (v["ev_total"] - v["afil"] + v["afil_libros"])),
 }
 
 
@@ -149,17 +157,17 @@ def main(ruta_xlsx, salida):
         return par
 
     # Encabezado
-    par = parrafo([("MEMORANDO A LA JUNTA DIRECTIVA · AMERICAN CABLE COMMUNICATIONS", True)], tam=8, despues=0)
+    par = parrafo([("MEMORANDO A LA JUNTA DIRECTIVA · AMERICAN CABLE COMMUNICATIONS (ACC)", True)], tam=8, despues=0)
     par.runs[0].font.color.rgb = RGBColor.from_string("666666")
-    par = parrafo([("De: Desarrollo de Negocios (Grupo 3) · Diciembre de 2007 · Cifras en millones de US$", False)], tam=8, despues=4)
+    par = parrafo([("De: Desarrollo de Negocios (Grupo 3) · Diciembre de 2007 · Todas las cifras en millones de US$", False)],
+                  tam=8, despues=4)
     par.runs[0].font.color.rgb = RGBColor.from_string("666666")
     par = parrafo(despues=4)
-    r = par.add_run(f"Compra de AirThread: ofertar, pero no pagar más de US${n(v['maximo'])} millones")
+    r = par.add_run(f"Compra de AirThread: recomendamos ofertar, con un precio máximo de US${n(v['maximo'])} millones")
     r.bold = True
-    r.font.size = Pt(17)
+    r.font.size = Pt(16)
     r.font.color.rgb = RGBColor.from_string(AZUL)
 
-    # Recuadro de recomendación
     t = doc.add_table(rows=1, cols=1)
     t.alignment = WD_TABLE_ALIGNMENT.CENTER
     c = t.cell(0, 0)
@@ -169,45 +177,51 @@ def main(ruta_xlsx, salida):
     pr.paragraph_format.space_after = Pt(3)
     pr.paragraph_format.space_before = Pt(3)
     texto(pr, [("Recomendación: ", True),
-               (f"presentar una oferta por el 100% de AirThread Connections (ATC). Abrir en US${n(v['apertura'])} millones, "
-                f"buscar cerrar en US${n(v['objetivo'])} millones y retirarse si el precio supera US${n(v['maximo'])} millones. "
-                "Ese tope paga lo que ATC vale por sí sola más el ahorro de backhaul que solo ACC puede generar con su fibra; "
-                "no paga por adelantado las sinergias de ingresos, que son inciertas.", False)])
-    parrafo(despues=0).paragraph_format.space_after = Pt(0)
+               ("comprar el 100% de AirThread Connections (ATC), siempre que el precio no supere "
+                f"US${n(v['maximo'])} millones. Proponemos abrir la negociación en US${n(v['apertura'])} millones y buscar "
+                f"cerrar cerca de US${n(v['objetivo'])} millones. Si el vendedor pide más, ACC debe retirarse: por encima de "
+                "ese precio estaríamos pagando por beneficios inciertos que solo existirían gracias a ACC.", False)])
+    parrafo(despues=0)
 
-    # 1. Situación
-    titulo_seccion("1. El problema: cuánto pagar sin destruir valor")
-    parrafo([("ACC necesita una oferta inalámbrica para competir con los operadores que venden paquetes. ATC le da esa oferta, "
-              "pero el mayor riesgo de la operación es pagar de más. Los hechos que importan:", False)])
-    viñeta([("ATC es rentable, pero está en desventaja. ", True),
-            (f"Su margen EBITDA es {p(v['m_ebitda'])}, frente a {p(v['m_comp'])} de sus rivales. En 2007 su ingreso por minuto "
-             f"cayó {p(-v['rpm_var'])} y el costo de captar un cliente subió {p(v['cpa_var'])}.", False)])
-    viñeta([(f"Por sí sola vale US${n(v['eq'])} millones ", True),
-            (f"(patrimonio, {n(v['ev_ebitda07'], 1)} veces su EBITDA de 2007). Es un flujo de caja descontado con WACC de "
-             f"{p(v['wacc'], 2)} y crecimiento perpetuo de {p(v['g'], 2)}; el {p(v['tv_share'], 0)} del valor está después de 2012.", False)])
-    viñeta([(f"Con ACC vale US${n(v['sin_tot'])} millones más. ", True),
-            (f"US${n(v['sin_bh'])} millones salen del backhaul (usar la fibra de ACC ahorra US${n(v['ahorro_bh12'])} millones al año "
-             f"en 2012) y US${n(v['sin_rev'])} millones de clientes empresariales: el {p(v['sinrev_sh'], 0)} de las sinergias, "
-             "sin un margen documentado.", False)])
-    viñeta([("El mercado sugiere precios mucho mayores. ", True),
-            (f"Con el múltiplo mediano de los comparables ({n(v['mult'], 1)} veces el EBITDA), ATC valdría US${n(v['eq_mult'])} "
-             f"millones, pero eso exige que crezca {p(v['g_impl'])} al año para siempre.", False)])
-    viñeta([("La deuda propuesta por el banco es alta. ", True),
-            (f"US${n(v['deuda'])} millones equivalen al {p(v['dv_ops'])} del valor de las operaciones (límite: 50%), y el flujo de "
-             f"ATC no alcanza para las cuotas: en 2011 ya necesita US${n(v['linea11'])} millones de línea de crédito.", False)])
+    titulo_seccion("1. La decisión que debe tomar la Junta")
+    parrafo([("ACC ofrece televisión, internet y telefonía fija, pero no telefonía celular. Sus competidores ya venden "
+              "paquetes que incluyen celular, y ACC corre el riesgo de quedarse atrás. Comprar ATC, un operador celular "
+              "regional, resolvería ese vacío. La pregunta no es solo si comprar, sino ", False),
+             ("cuánto pagar sin destruir valor para los accionistas", True),
+             (": pagar de más es la forma más común en que una adquisición fracasa.", False)])
 
-    # Tabla de valor
-    filas = [("Valor de las operaciones (flujo de caja descontado)", v["ops"], False),
-             ("+ Caja, afiliadas y nota por cobrar", v["noop"], False),
-             ("− Deuda existente e interés minoritario", -v["claims"], False),
-             ("Valor del patrimonio de ATC por sí sola", v["eq"], True),
-             ("+ Sinergias de backhaul", v["sin_bh"], False),
-             ("+ Sinergias de clientes empresariales", v["sin_rev"], False),
-             ("Valor del patrimonio con todas las sinergias", v["eq_sin"], True)]
+    titulo_seccion("2. Lo que sabemos")
+    viñeta([("ATC es rentable, pero más débil que sus competidores. ", True),
+            (f"De cada US$100 que vende, le quedan US${n(v['m_ebitda'] * 100, 0)} de utilidad operativa (antes de "
+             f"depreciación), frente a US${n(v['m_comp'] * 100, 0)} de sus rivales. Además, en 2007 el precio que cobra por "
+             f"minuto bajó {p(-v['rpm_var'])} y conseguir cada cliente nuevo le costó {p(v['cpa_var'])} más.", False)])
+    viñeta([(f"Por sí sola, ATC vale unos US${n(v['eq'])} millones. ", True),
+            ("Estimamos el dinero que generará en los próximos años y lo llevamos a valor de hoy, exigiendo un "
+             f"rendimiento de {p(v['wacc'], 1)} anual, que es lo que cuesta financiar la compra. Ese valor equivale a "
+             f"{n(v['ev_ebitda07'], 1)} veces su utilidad operativa de 2007.", False)])
+    viñeta([(f"Junto con ACC, ATC vale US${n(v['sin_tot'])} millones más. ", True),
+            (f"US${n(v['sin_bh'])} millones vienen de ahorrar costos: ATC podría usar la red de fibra de ACC para conectar "
+             f"sus antenas, en lugar de alquilar líneas (US${n(v['ahorro_bh12'])} millones de ahorro al año en 2012). Los "
+             f"otros US${n(v['sin_rev'])} millones vendrían de vender planes celulares a empresas clientes de ACC, pero "
+             "esa cifra es una estimación sin experiencia previa que la respalde.", False)])
+    viñeta([("El vendedor probablemente pedirá mucho más. ", True),
+            (f"Si se usa el precio al que se negocian empresas parecidas, ATC valdría US${n(v['eq_mult'])} millones. "
+             f"Para justificarlo, ATC tendría que crecer {p(v['g_impl'])} al año para siempre, algo poco realista para una "
+             "empresa que está perdiendo margen.", False)])
+    viñeta([("La financiación propuesta por el banco es exigente. ", True),
+            (f"El banco ofrece prestar US${n(v['deuda'])} millones. Es el {p(v['dv_total'])} del valor total de ATC, "
+             "justo por debajo del 50% que recomienda el banco. Sin embargo, el dinero que genera ATC no alcanza para pagar "
+             f"las cuotas: necesitaría un crédito adicional que llegaría a US${n(v['linea12'])} millones en 2012, cuando "
+             f"además habrá que renovar un saldo de US${n(v['bullet'])} millones.", False)])
+
+    filas = [("ATC por sí sola", v["eq"], False),
+             ("+ Ahorro por usar la red de fibra de ACC (más seguro)", v["sin_bh"], False),
+             ("+ Ventas a empresas clientes de ACC (incierto)", v["sin_rev"], False),
+             ("ATC con todos los beneficios de la unión", v["eq_sin"], True),
+             ("Referencia: precio según empresas parecidas", v["eq_mult"], False)]
     t = doc.add_table(rows=len(filas) + 1, cols=2)
     t.alignment = WD_TABLE_ALIGNMENT.CENTER
-    enc = [("Cómo se llega al valor", False), ("US$ millones", True)]
-    for j, (txt, der) in enumerate(enc):
+    for j, (txt, der) in enumerate([("¿Cuánto vale ATC? (patrimonio, 100%)", False), ("US$ millones", True)]):
         cel = t.cell(0, j)
         sombrear(cel, AZUL)
         pr = cel.paragraphs[0]
@@ -229,34 +243,36 @@ def main(ruta_xlsx, salida):
             r = pr.add_run(txt)
             r.bold = neg
             r.font.size = Pt(9.5)
+            if i == len(filas):
+                r.italic = True
             if j == 1:
                 pr.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     for fila in t.rows:
-        fila.cells[0].width = Cm(9.5)
+        fila.cells[0].width = Cm(10.5)
         fila.cells[1].width = Cm(2.8)
 
-    # 2. Alternativas
     doc.add_paragraph().add_run().add_break(WD_BREAK.PAGE)
     doc.paragraphs[-1].paragraph_format.space_after = Pt(0)
-    titulo_seccion("2. Alternativas")
-    cols = ["", "A. Pagar solo el valor de ATC", "B. Compartir solo el backhaul", "C. Pagar todas las sinergias",
-            "D. No comprar: acuerdo de backhaul"]
+    titulo_seccion("3. Alternativas")
+    cols = ["", "A. Pagar solo lo que ATC vale por sí sola", "B. Compartir solo el ahorro de la fibra",
+            "C. Pagar todos los beneficios de la unión", "D. No comprar y firmar un acuerdo comercial"]
     filas = [
-        ("Precio", f"Hasta {n(v['eq'])}", f"{n(v['apertura'])} a {n(v['maximo'])}", f"Hasta {n(v['eq_sin'])}", "Sin compra"),
-        ("Valor que conserva ACC", f"Todas las sinergias ({n(v['sin_tot'])})",
-         f"Al menos las de ingresos ({n(v['sin_rev'])})", "Ninguno",
-         f"Parte del ahorro de backhaul ({n(v['ahorro_bh12'])} al año en 2012)"),
-        ("Implicaciones", "El vendedor, anclado en múltiplos de mercado, probablemente no la acepte.",
-         f"Prima de {p(v['prima'])} sobre el valor de ATC ({n(v['mult_max'], 1)} veces el EBITDA). El vendedor cobra algo que no "
-         "podría lograr por su cuenta.",
-         f"Gana cualquier subasta, pero si solo se logra la mitad de las sinergias de ingresos, ACC pierde {n(v['mitad_rev'])}.",
-         "No requiere deuda, pero ACC sigue sin oferta inalámbrica."),
-        ("Riesgo principal", "Perder ATC frente a otro comprador.", "Que el vendedor no baje de los precios del mercado.",
-         "Pagar de más: transfiere al vendedor todo el valor que crea ACC.", "Que un competidor compre ATC."),
+        ("Precio", f"Hasta {n(v['eq'])}", f"Entre {n(v['apertura'])} y {n(v['maximo'])}", f"Hasta {n(v['eq_sin'])}",
+         "No hay compra"),
+        ("Qué gana ACC", f"Se queda con todos los beneficios de la unión ({n(v['sin_tot'])})",
+         f"Se queda con las ventas a empresas ({n(v['sin_rev'])}) como colchón",
+         "Nada: todo el beneficio se lo lleva el vendedor",
+         f"Cobra a ATC por usar su fibra (hasta {n(v['ahorro_bh12'])} al año)"),
+        ("Qué implica", "Es el precio más seguro, pero el vendedor difícilmente lo aceptará.",
+         f"El vendedor recibe {p(v['prima'])} más de lo que ATC vale por sí sola.",
+         f"Gana cualquier subasta, pero si las ventas a empresas salen a medias, ACC pierde {n(v['mitad_rev'])}.",
+         "No requiere deuda, pero ACC sigue sin telefonía celular."),
+        ("Mayor riesgo", "Que otro comprador se quede con ATC.", "Que el vendedor no acepte bajar su precio.",
+         "Pagar de más.", "Que un competidor compre ATC."),
     ]
     t = doc.add_table(rows=len(filas) + 1, cols=5)
     t.alignment = WD_TABLE_ALIGNMENT.CENTER
-    anchos = [Cm(2.6), Cm(3.4), Cm(3.7), Cm(3.4), Cm(3.4)]
+    anchos = [Cm(2.4), Cm(3.5), Cm(3.7), Cm(3.5), Cm(3.5)]
     for j, txt in enumerate(cols):
         cel = t.cell(0, j)
         sombrear(cel, "2E7D32" if j == 2 else AZUL)
@@ -286,27 +302,30 @@ def main(ruta_xlsx, salida):
         for j, w in enumerate(anchos):
             fila.cells[j].width = w
 
-    # 3. Recomendación
-    titulo_seccion(f"3. Recomendación: alternativa B, con tope de US${n(v['maximo'])} millones")
-    numerada([("El precio es disciplinado. ", True),
-              (f"US${n(v['maximo'])} millones equivalen a {n(v['mult_max'], 1)} veces el EBITDA de 2007 y a una prima de "
-               f"{p(v['prima'])} sobre el valor de ATC. El P/U histórico de la industria da un valor similar "
-               f"(US${n(v['eq_pe'])} millones); los múltiplos actuales de los comparables suponen un crecimiento que ATC no "
-               "puede sostener con sus márgenes.", False)])
-    numerada([("Solo se paga lo que ACC controla. ", True),
-              ("El ahorro de backhaul depende de la fibra de ACC y es la sinergia más cierta. Las sinergias de clientes "
-               f"empresariales (US${n(v['sin_rev'])} millones) quedan como margen de seguridad para ACC.", False)])
-    numerada([("Estrategia de negociación. ", True),
-              (f"Abrir en US${n(v['apertura'])} millones: el valor de ATC menos el {p(v['ipo'], 0)} que le costaría salir a bolsa, "
-               f"que es la alternativa real del vendedor. Buscar US${n(v['objetivo'])} millones, que comparte la mitad del ahorro "
-               "de backhaul. Si el vendedor pide más, ofrecer un pago adicional condicionado a que se cumplan las metas de "
-               "clientes empresariales, en vez de subir el precio fijo.", False)])
-    numerada([("Condiciones para firmar. ", True),
-              (f"(a) Revisar las afiliadas, que aportan US${n(v['afil'])} millones ({p(v['afil_sh'], 0)} del valor). "
-               "(b) Que la deuda no supere el 50% del valor: reducir el préstamo propuesto o aportar más capital, y garantizar "
-               "la línea de crédito que ATC necesitará. "
-               f"(c) Si el precio supera US${n(v['maximo'])} millones, retirarse y negociar con ATC un acuerdo comercial de "
-               "backhaul (alternativa D).", False)])
+    titulo_seccion("4. Recomendación: alternativa B")
+    numerada([("Es un precio razonable. ", True),
+              (f"Pagar hasta US${n(v['maximo'])} millones significa reconocerle al vendedor {p(v['prima'])} sobre lo que ATC "
+               f"vale por sí sola. Otro método, basado en las utilidades históricas del sector, da un valor parecido "
+               f"(US${n(v['eq_pe'])} millones).", False)])
+    numerada([("Solo pagamos lo que depende de nosotros. ", True),
+              ("El ahorro de la fibra lo genera la red de ACC y es el beneficio más seguro. Las ventas a empresas "
+               f"(US${n(v['sin_rev'])} millones) no se pagan por adelantado: quedan como colchón si algo sale mal.", False)])
+    numerada([("Cómo negociar. ", True),
+              (f"Abrir en US${n(v['apertura'])} millones: lo que ATC vale por sí sola menos el {p(v['ipo'], 0)} que le costaría "
+               f"vender acciones en bolsa, que es la otra opción del vendedor. Buscar cerrar en US${n(v['objetivo'])} millones. "
+               "Si el vendedor pide más, ofrecer un pago adicional solo si se cumplen las metas de ventas a empresas, en lugar "
+               "de subir el precio fijo.", False)])
+    numerada([("La financiación es viable si ACC la respalda. ", True),
+              (f"El préstamo de US${n(v['deuda'])} millones está dentro del límite del banco, y la deuda baja de "
+               f"{n(v['deuda_ebitda08'], 1)} a {n(v['deuda_ebitda12'], 1)} veces la utilidad operativa entre 2008 y 2012, lo que "
+               "facilita renovar el saldo de 2012. Pero ACC debe comprometerse a cubrir el crédito adicional de hasta "
+               f"US${n(v['linea12'])} millones. Si el banco calcula el límite solo sobre el negocio celular, conviene pedir "
+               f"un préstamo menor (US${n(v['deuda50'])} millones) y que ACC aporte la diferencia "
+               f"(US${n(v['reduccion'])} millones) con recursos propios.", False)])
+    numerada([("Antes de firmar. ", True),
+              (f"Revisar a fondo las inversiones de ATC en otras empresas, que representan US${n(v['afil'])} millones "
+               f"({p(v['afil_sh'], 0)} del valor). Si el precio supera US${n(v['maximo'])} millones, retirarse y proponer a ATC "
+               "un acuerdo para alquilarle la fibra de ACC (alternativa D).", False)])
 
     titulo_seccion("Referencias")
     parrafo([("Stafford, E. y Heilprin, J. (2011, rev. 2012). ", False), ("Valuation of AirThread Connections", False),

@@ -39,7 +39,19 @@ Archivo: `Caso_2_Grupo_3_1.xlsx`. Las cifras derivadas se calculan solo con celd
 | ahorro_bh12 | `SINERGIAS!H8` | 75,9762 |
 | ipo | `PROYECCIONES!K7` | 0,1000 |
 | ebitda07 | `PROYECCIONES!B26` | 1.033,3250 |
+| dv_total | `VALORACIÓN!B43` | 0,4737 |
+| ev_total | `VALORACIÓN!B24` | 7.933,0141 |
+| afil_libros | `Exhibit 5!G72` | 157,6930 |
+| linea12_total | `PROYECCIONES!G85` | 2.698,3424 |
+| bullet | `Exhibit 6!P11` | 2.135,0497 |
+| deuda_ebitda08 | `PROYECCIONES!C97` | 3,2269 |
+| deuda_ebitda12 | `PROYECCIONES!G97` | 1,6088 |
+| cobertura08 | `PROYECCIONES!C98` | 5,5716 |
 | rpm_var | Exhibit 3!G73 / Exhibit 3!F73 − 1 | −0,1128 |
 | cpa_var | Exhibit 3!G60 / Exhibit 3!F60 − 1 | 0,2649 |
 | sin_tot | VALORACIÓN!B28 + VALORACIÓN!B29 | 2.524,4822 |
 | mitad_rev | VALORACIÓN!B29 / 2 | 888,1717 |
+| linea12 | PROYECCIONES!G85 − Exhibit 6!P11 | 563,2927 |
+| deuda50 | 0,5 × VALORACIÓN!B8 | 2.994,2635 |
+| reduccion | Exhibit 6!H8 − 0,5 × VALORACIÓN!B8 | 763,2820 |
+| dv_afil_libros | Exhibit 6!H8 / (VALORACIÓN!B24 − VALORACIÓN!B13 + Exhibit 5!G72) | 0,5897 |
