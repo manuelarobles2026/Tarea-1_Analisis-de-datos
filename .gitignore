@@ -1,2 +1,5 @@
 __pycache__/
 *.pyc
+
+# Marco de casos: contiene nombres del grupo; no publicar en repositorio público
+marco/
